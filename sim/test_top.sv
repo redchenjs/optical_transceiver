@@ -145,7 +145,7 @@ always begin
 end
 
 always begin
-    #6.4 ref_clk_p <= ~ref_clk_p;
+    #3.2 ref_clk_p <= ~ref_clk_p;
          ref_clk_n <= ~ref_clk_n;
 end
 
