@@ -9,216 +9,148 @@
 
 module test_top;
 
-localparam XLEN = 32;
+logic sfp_rx_p_i;
+logic sfp_rx_n_i;
+logic sfp_tx_p_o;
+logic sfp_tx_n_o;
 
-typedef enum logic [7:0] {
-    CPU_RST = 8'h2a,
-    CPU_RUN = 8'h2b,
-    CONF_WR = 8'h2c,
-    CONF_RD = 8'h2d,
-    DATA_WR = 8'h2e,
-    DATA_RD = 8'h2f
-} cmd_t;
+assign sfp_rx_p_i = sfp_tx_p_o;
+assign sfp_rx_n_i = sfp_tx_n_o;
 
-logic clk_i;
-logic rst_n_i;
+logic sys_clk;
+logic sys_rst_n;
 
-wire sys_clk   = clk_i;
-wire sys_rst_n = rst_n_i;
+logic ref_clk_p;
+logic ref_clk_n;
 
-logic uart_rx_i;
-logic uart_tx_o;
+logic gt0_txusrclk2;
+logic gt0_rxusrclk2;
 
-logic [7:0] uart_tx_data_i;
-logic       uart_tx_data_vld_i;
-logic       uart_tx_data_rdy_o;
+logic [15:0] gt0_rxdata;
+logic        gt0_rxoutclkfabric;
+logic  [1:0] gt0_rxcharisk;
+logic        gt0_rxresetdone;
 
-logic            uart_tx_data_st;
-logic [XLEN-1:0] uart_tx_data_cnt;
+logic [15:0] gt0_txdata;
+logic        gt0_txoutclkfabric;
+logic        gt0_txoutclkpcs;
+logic  [1:0] gt0_txcharisk;
+logic        gt0_txresetdone;
 
-logic cpu_rst_n;
+gtx_tx gtx_tx(
+    .clk_i(gt0_txusrclk2),
+    .rst_n_i(gt0_txresetdone & gt0_rxresetdone),
 
-logic [7:0] uart_rx_data;
-logic       uart_rx_data_vld;
-logic       uart_rx_data_rdy;
+    .data_i(16'hdead),
 
-logic [7:0] uart_tx_data;
-logic       uart_tx_data_vld;
-logic       uart_tx_data_rdy;
-
-logic            ram_rw_sel;
-logic [XLEN-1:0] ram_rw_addr;
-logic      [7:0] ram_rd_data;
-logic      [3:0] ram_wr_byte_en;
-
-logic [XLEN-1:0] iram_rd_addr;
-
-logic [XLEN-1:0] dram_rd_addr;
-logic [XLEN-1:0] dram_wr_addr;
-logic [XLEN-1:0] dram_wr_data;
-logic      [3:0] dram_wr_byte_en;
-
-logic [XLEN-1:0] iram_rd_data;
-logic [XLEN-1:0] dram_rd_data;
-
-logic [7:0] cmd_table[] = '{
-    CPU_RST,
-    CONF_WR, 8'h00, 8'h00, 8'h00, 8'h00, 8'h0f, 8'h00, 8'h00, 8'h00,
-    // CONF_RD,
-    // DATA_WR, 8'haa, 8'hbb, 8'hcc, 8'hdd, 8'hee,
-    // DATA_RD
-    DATA_WR,
-    8'hb7, 8'hb3, 8'h00, 8'h00,
-    8'h93, 8'h83, 8'h53, 8'h50,
-    8'h13, 8'h81, 8'h83, 8'h00,
-    8'h23, 8'h24, 8'h27, 8'h02,
-    CPU_RUN
-};
-
-uart_tx data_gen(
-    .clk_i(sys_clk),
-    .rst_n_i(sys_rst_n),
-
-    .uart_tx_data_i(uart_tx_data_i),
-    .uart_tx_data_vld_i(uart_tx_data_vld_i),
-
-    .uart_tx_baud_div_i(32'd107),
-
-    .uart_tx_o(uart_rx_i),
-    .uart_tx_data_rdy_o(uart_tx_data_rdy_o)
+    .ctrl_o(gt0_txcharisk),
+    .data_o(gt0_txdata)
 );
 
-uart_rx uart_rx(
-    .clk_i(sys_clk),
-    .rst_n_i(sys_rst_n),
+gtx gtx(
+    .sysclk_in(sys_clk),
 
-    .uart_rx_i(uart_rx_i),
-    .uart_rx_data_rdy_i(uart_rx_data_rdy),
+    .q0_clk1_gtrefclk_pad_p_in(ref_clk_p),
+    .q0_clk1_gtrefclk_pad_n_in(ref_clk_n),
 
-    .uart_rx_baud_div_i(32'd107),
+    .soft_reset_tx_in(~sys_rst_n),
+    .soft_reset_rx_in(~sys_rst_n),
+    .dont_reset_on_data_error_in(1'b0),
 
-    .uart_rx_data_o(uart_rx_data),
-    .uart_rx_data_vld_o(uart_rx_data_vld)
-);
+    .gt0_tx_mmcm_lock_out(),
 
-uart_tx uart_tx(
-   .clk_i(sys_clk),
-   .rst_n_i(sys_rst_n),
+    .gt0_tx_fsm_reset_done_out(),
+    .gt0_rx_fsm_reset_done_out(),
 
-   .uart_tx_data_i(uart_tx_data),
-   .uart_tx_data_vld_i(uart_tx_data_vld),
+    .gt0_data_valid_in(1'b0),
 
-   .uart_tx_baud_div_i(32'd107),
+    .gt0_txusrclk_out(),
+    .gt0_txusrclk2_out(gt0_txusrclk2),
+    .gt0_rxusrclk_out(),
+    .gt0_rxusrclk2_out(gt0_rxusrclk2),
 
-   .uart_tx_o(uart_tx_o),
-   .uart_tx_data_rdy_o(uart_tx_data_rdy)
-);
+    .gt0_cpllfbclklost_out(),
+    .gt0_cplllock_out(),
+    .gt0_cpllreset_in(~sys_rst_n),
 
-ram_rw #(
-    .XLEN(XLEN)
-) ram_rw (
-    .clk_i(sys_clk),
-    .rst_n_i(sys_rst_n),
+    .gt0_drpaddr_in(9'h000),
+    .gt0_drpdi_in(16'h0000),
+    .gt0_drpdo_out(),
+    .gt0_drpen_in(1'b0),
+    .gt0_drprdy_out(),
+    .gt0_drpwe_in(1'b0),
 
-    .uart_tx_data_rdy_i(uart_tx_data_rdy),
+    .gt0_dmonitorout_out(),
 
-    .uart_rx_data_i(uart_rx_data),
-    .uart_rx_data_vld_i(uart_rx_data_vld),
+    .gt0_eyescanreset_in(~sys_rst_n),
+    .gt0_rxuserrdy_in(1'b1),
 
-    .ram_rd_data_i(ram_rd_data),
+    .gt0_eyescandataerror_out(),
+    .gt0_eyescantrigger_in(1'b0),
 
-    .cpu_rst_n_o(cpu_rst_n),
+    .gt0_rxdata_out(gt0_rxdata),
 
-    .ram_rw_sel_o(ram_rw_sel),
-    .ram_rw_addr_o(ram_rw_addr),
-    .ram_wr_byte_en_o(ram_wr_byte_en),
+    .gt0_rxdisperr_out(),
+    .gt0_rxnotintable_out(),
 
-    .uart_rx_data_rdy_o(uart_rx_data_rdy),
+    .gt0_gtxrxp_in(sfp_rx_p_i),
+    .gt0_gtxrxn_in(sfp_rx_n_i),
 
-    .uart_tx_data_o(uart_tx_data),
-    .uart_tx_data_vld_o(uart_tx_data_vld)
-);
+    .gt0_rxphmonitor_out(),
+    .gt0_rxphslipmonitor_out(),
 
-ram #(
-    .XLEN(XLEN)
-) ram (
-    .clk_i(sys_clk),
-    .rst_n_i(sys_rst_n),
+    .gt0_rxdfelpmreset_in(~sys_rst_n),
 
-    .ram_rw_sel_i(ram_rw_sel),
-    .ram_rw_addr_i(ram_rw_addr),
-    .ram_wr_data_i({uart_rx_data, uart_rx_data, uart_rx_data, uart_rx_data}),
-    .ram_wr_byte_en_i(ram_wr_byte_en),
+    .gt0_rxmonitorout_out(),
+    .gt0_rxmonitorsel_in(2'b00),
 
-    .iram_rd_addr_i(iram_rd_addr),
+    .gt0_rxoutclkfabric_out(gt0_rxoutclkfabric),
 
-    .dram_rd_addr_i(dram_rd_addr),
-    .dram_wr_addr_i(dram_wr_addr),
-    .dram_wr_data_i(dram_wr_data),
-    .dram_wr_byte_en_i(dram_wr_byte_en),
+    .gt0_gtrxreset_in(~sys_rst_n),
+    .gt0_rxpmareset_in(~sys_rst_n),
 
-    .iram_rd_data_o(iram_rd_data),
-    .dram_rd_data_o(dram_rd_data),
+    .gt0_rxcharisk_out(gt0_rxcharisk),
+    .gt0_rxresetdone_out(gt0_rxresetdone),
 
-    .ram_rd_data_o(ram_rd_data)
-);
+    .gt0_gttxreset_in(~sys_rst_n),
+    .gt0_txuserrdy_in(1'b1),
 
-hxd32 #(
-    .XLEN(XLEN)
-) hxd32 (
-    .clk_i(sys_clk),
-    .rst_n_i(cpu_rst_n),
+    .gt0_txdata_in(gt0_txdata),
 
-    .iram_rd_data_i(iram_rd_data),
-    .dram_rd_data_i(dram_rd_data),
+    .gt0_gtxtxp_out(sfp_tx_p_o),
+    .gt0_gtxtxn_out(sfp_tx_n_o),
 
-    .iram_rd_addr_o(iram_rd_addr),
-    .dram_rd_addr_o(dram_rd_addr),
+    .gt0_txoutclkfabric_out(gt0_txoutclkfabric),
+    .gt0_txoutclkpcs_out(gt0_txoutclkpcs),
 
-    .dram_wr_addr_o(dram_wr_addr),
-    .dram_wr_data_o(dram_wr_data),
-    .dram_wr_byte_en_o(dram_wr_byte_en)
+    .gt0_txcharisk_in(gt0_txcharisk),
+    .gt0_txresetdone_out(gt0_txresetdone),
+
+    .gt0_qplloutclk_out(),
+    .gt0_qplloutrefclk_out()
 );
 
 initial begin
-    clk_i   <= 1'b1;
-    rst_n_i <= 1'b0;
+    sys_clk   <= 1'b1;
+    sys_rst_n <= 1'b0;
 
-    #2 rst_n_i <= 1'b1;
+    ref_clk_p <= 1'b1;
+    ref_clk_n <= 1'b0;
+
+    #2 sys_rst_n <= 1'b1;
 end
 
 always begin
-    #2.5 clk_i <= ~clk_i;
-end
-
-edge2en uart_tx_data_st_en(
-    .clk_i(clk_i),
-    .rst_n_i(rst_n_i),
-    .data_i(uart_tx_data_rdy_o),
-    .pos_edge_o(uart_tx_data_st)
-);
-
-always_ff @(posedge clk_i or negedge rst_n_i)
-begin
-    if (!rst_n_i) begin
-        uart_tx_data_i     <= 8'h00;
-        uart_tx_data_vld_i <= 1'b0;
-
-        uart_tx_data_cnt <= 32'h0000_0000;
-    end else begin
-        if (uart_tx_data_st) begin
-            uart_tx_data_i     <= (uart_tx_data_cnt < $size(cmd_table)) ? cmd_table[uart_tx_data_cnt] : 8'h00;
-            uart_tx_data_vld_i <= (uart_tx_data_cnt < $size(cmd_table)) ? 1'b1 : 1'b0;
-
-            uart_tx_data_cnt <= uart_tx_data_cnt + 1'b1;
-        end else begin
-            uart_tx_data_vld_i <= uart_tx_data_rdy_o ? 1'b0 : uart_tx_data_vld_i;
-        end
-    end
+    #5 sys_clk <= ~sys_clk;
 end
 
 always begin
-    #750000 rst_n_i <= 1'b0;
+    #6.4 ref_clk_p <= ~ref_clk_p;
+         ref_clk_n <= ~ref_clk_n;
+end
+
+always begin
+    #750000 sys_rst_n <= 1'b0;
     #25 $stop;
 end
 

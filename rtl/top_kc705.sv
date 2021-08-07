@@ -123,7 +123,7 @@ gtx gtx(
 
     .gt0_drpaddr_in(9'h000),
     .gt0_drpdi_in(16'h0000),
-    .gt0_drpdo_out(16'h0000),
+    .gt0_drpdo_out(),
     .gt0_drpen_in(1'b0),
     .gt0_drprdy_out(),
     .gt0_drpwe_in(1'b0),
