@@ -44,6 +44,9 @@ set_property -dict {PACKAGE_PIN AB28 IOSTANDARD LVCMOS25} [get_ports {xadc_gpio_
 set_property -dict {PACKAGE_PIN AA25 IOSTANDARD LVCMOS25} [get_ports {xadc_gpio_i[1]}]
 set_property -dict {PACKAGE_PIN AB25 IOSTANDARD LVCMOS25} [get_ports {xadc_gpio_i[0]}]
 
+set_false_path -to [get_pins -filter {REF_PIN_NAME=~*CLR} -of_objects [get_cells -hierarchical -filter {NAME =~ *rst_n_a*}]]
+set_false_path -to [get_pins -filter {REF_PIN_NAME=~*CLR} -of_objects [get_cells -hierarchical -filter {NAME =~ *rst_n_b*}]]
+
 set_false_path -from [get_ports cpu_rst_i]
 set_false_path -from [get_ports uart_rx_i]
 set_false_path -to [get_ports uart_tx_o]
@@ -51,3 +54,5 @@ set_false_path -from [get_ports sm_fan_tach_i]
 set_false_path -to [get_ports sm_fan_pwm_o]
 set_false_path -from [get_ports {gpio_sw_i[*]}]
 set_false_path -to [get_ports {gpio_led_o[*]}]
+set_false_path -from [get_ports {xadc_gpio_i[*]}]
+set_false_path -to [get_ports {xadc_gpio_o[*]}]

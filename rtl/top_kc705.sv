@@ -47,6 +47,9 @@ logic user_clk;
 logic gt0_txusrclk2;
 logic gt0_rxusrclk2;
 
+logic gt0_tx_rst_n;
+logic gt0_rx_rst_n;
+
 logic gt0_tx_fsm_reset_done;
 logic gt0_rx_fsm_reset_done;
 
@@ -87,9 +90,16 @@ sys_ctl sys_ctl(
     .sys_rst_n_o(sys_rst_n)
 );
 
-gtx_tx gtx_tx(
+rst_syn gt0_tx_rst_syn(
     .clk_i(gt0_txusrclk2),
     .rst_n_i(gt0_tx_fsm_reset_done),
+
+    .rst_n_o(gt0_tx_rst_n)
+);
+
+gtx_tx gtx_tx(
+    .clk_i(gt0_txusrclk2),
+    .rst_n_i(gt0_tx_rst_n),
 
     .data_i(xadc_gpio_i),
 
@@ -97,9 +107,16 @@ gtx_tx gtx_tx(
     .data_o(gt0_txdata)
 );
 
-gtx_rx gtx_rx(
+rst_syn gt0_rx_rst_syn(
     .clk_i(gt0_rxusrclk2),
     .rst_n_i(gt0_rx_fsm_reset_done),
+
+    .rst_n_o(gt0_rx_rst_n)
+);
+
+gtx_rx gtx_rx(
+    .clk_i(gt0_rxusrclk2),
+    .rst_n_i(gt0_rx_rst_n),
 
     .ctrl_i(gt0_rxcharisk),
     .data_i(gt0_rxdata),
@@ -126,10 +143,6 @@ gtx gtx(
     .gt0_txusrclk2_out(gt0_txusrclk2),
     .gt0_rxusrclk_out(),
     .gt0_rxusrclk2_out(gt0_rxusrclk2),
-
-    .gt0_cpllfbclklost_out(),
-    .gt0_cplllock_out(),
-    .gt0_cpllreset_in(~sys_rst_n),
 
     .gt0_drpaddr_in(9'h000),
     .gt0_drpdi_in(16'h0000),
