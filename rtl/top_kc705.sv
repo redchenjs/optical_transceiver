@@ -57,7 +57,7 @@ logic [15:0] gt0_txdata;
 logic  [1:0] gt0_txcharisk;
 
 assign gpio_led_o[7] = sys_rst_n;
-assign gpio_led_o[6] = 1'b0;
+assign gpio_led_o[6] = sfp_los_i;
 assign gpio_led_o[5] = xadc_gpio_o[3];
 assign gpio_led_o[4] = xadc_gpio_o[2];
 assign gpio_led_o[3] = xadc_gpio_i[1];
