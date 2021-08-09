@@ -12,9 +12,6 @@ module top_kc705(
     input logic ref_clk_p_i,
     input logic ref_clk_n_i,
 
-    input logic user_clk_p_i,
-    input logic user_clk_n_i,
-
     output logic user_clk_p_o,
     output logic user_clk_n_o,
 
@@ -35,7 +32,10 @@ module top_kc705(
     output logic sm_fan_pwm_o,
 
     input  logic [6:2] gpio_sw_i,
-    output logic [7:0] gpio_led_o
+    output logic [7:0] gpio_led_o,
+
+    input  logic [1:0] xadc_gpio_i,
+    output logic [3:2] xadc_gpio_o
 );
 
 logic sys_clk;
@@ -47,25 +47,23 @@ logic user_clk;
 logic gt0_txusrclk2;
 logic gt0_rxusrclk2;
 
+logic gt0_tx_fsm_reset_done;
+logic gt0_rx_fsm_reset_done;
+
 logic [15:0] gt0_rxdata;
-logic        gt0_rxoutclkfabric;
 logic  [1:0] gt0_rxcharisk;
-logic        gt0_rxresetdone;
 
 logic [15:0] gt0_txdata;
-logic        gt0_txoutclkfabric;
-logic        gt0_txoutclkpcs;
 logic  [1:0] gt0_txcharisk;
-logic        gt0_txresetdone;
 
 assign gpio_led_o[7] = sys_rst_n;
 assign gpio_led_o[6] = 1'b0;
-assign gpio_led_o[5] = 1'b0;
-assign gpio_led_o[4] = 1'b0;
-assign gpio_led_o[3] = gt0_rxoutclkfabric;
-assign gpio_led_o[2] = gt0_txoutclkfabric;
-assign gpio_led_o[1] = gt0_rxresetdone;
-assign gpio_led_o[0] = gt0_txresetdone;
+assign gpio_led_o[5] = xadc_gpio_o[3];
+assign gpio_led_o[4] = xadc_gpio_o[2];
+assign gpio_led_o[3] = xadc_gpio_i[1];
+assign gpio_led_o[2] = xadc_gpio_i[0];
+assign gpio_led_o[1] = gt0_rx_fsm_reset_done;
+assign gpio_led_o[0] = gt0_tx_fsm_reset_done;
 
 assign sm_fan_pwm_o = 1'b0;
 
@@ -75,16 +73,10 @@ IBUFDS sys_clk_buf(
     .IB(sys_clk_n_i)
 );
 
-IBUFDS user_clk_buf_i(
-    .I(user_clk_p_i),
-    .IB(user_clk_n_i),
-    .O(user_clk)
-);
-
 OBUFDS user_clk_buf_o(
    .O(user_clk_p_o),
    .OB(user_clk_n_o),
-   .I(user_clk)
+   .I(sys_clk)
 );
 
 sys_ctl sys_ctl(
@@ -93,6 +85,26 @@ sys_ctl sys_ctl(
 
     .sys_clk_o(sys_clk),
     .sys_rst_n_o(sys_rst_n)
+);
+
+gtx_tx gtx_tx(
+    .clk_i(gt0_txusrclk2),
+    .rst_n_i(gt0_tx_fsm_reset_done),
+
+    .data_i(xadc_gpio_i),
+
+    .ctrl_o(gt0_txcharisk),
+    .data_o(gt0_txdata)
+);
+
+gtx_rx gtx_rx(
+    .clk_i(gt0_rxusrclk2),
+    .rst_n_i(gt0_rx_fsm_reset_done),
+
+    .ctrl_i(gt0_rxcharisk),
+    .data_i(gt0_rxdata),
+
+    .data_o(xadc_gpio_o)
 );
 
 gtx gtx(
@@ -105,12 +117,10 @@ gtx gtx(
     .soft_reset_rx_in(~sys_rst_n),
     .dont_reset_on_data_error_in(1'b0),
 
-    .gt0_tx_mmcm_lock_out(),
+    .gt0_tx_fsm_reset_done_out(gt0_tx_fsm_reset_done),
+    .gt0_rx_fsm_reset_done_out(gt0_rx_fsm_reset_done),
 
-    .gt0_tx_fsm_reset_done_out(),
-    .gt0_rx_fsm_reset_done_out(),
-
-    .gt0_data_valid_in(1'b0),
+    .gt0_data_valid_in(gt0_rx_fsm_reset_done),
 
     .gt0_txusrclk_out(),
     .gt0_txusrclk2_out(gt0_txusrclk2),
@@ -152,13 +162,13 @@ gtx gtx(
     .gt0_rxmonitorout_out(),
     .gt0_rxmonitorsel_in(2'b00),
 
-    .gt0_rxoutclkfabric_out(gt0_rxoutclkfabric),
+    .gt0_rxoutclkfabric_out(),
 
     .gt0_gtrxreset_in(~sys_rst_n),
     .gt0_rxpmareset_in(~sys_rst_n),
 
     .gt0_rxcharisk_out(gt0_rxcharisk),
-    .gt0_rxresetdone_out(gt0_rxresetdone),
+    .gt0_rxresetdone_out(),
 
     .gt0_gttxreset_in(~sys_rst_n),
     .gt0_txuserrdy_in(1'b1),
@@ -168,11 +178,11 @@ gtx gtx(
     .gt0_gtxtxp_out(sfp_tx_p_o),
     .gt0_gtxtxn_out(sfp_tx_n_o),
 
-    .gt0_txoutclkfabric_out(gt0_txoutclkfabric),
-    .gt0_txoutclkpcs_out(gt0_txoutclkpcs),
+    .gt0_txoutclkfabric_out(),
+    .gt0_txoutclkpcs_out(),
 
     .gt0_txcharisk_in(gt0_txcharisk),
-    .gt0_txresetdone_out(gt0_txresetdone),
+    .gt0_txresetdone_out(),
 
     .gt0_qplloutclk_out(),
     .gt0_qplloutrefclk_out()

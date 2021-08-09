@@ -1,7 +1,7 @@
 /*
  * gtx_tx.sv
  *
- *  Created on: 2021-06-09 16:38
+ *  Created on: 2021-08-08 13:52
  *      Author: Jack Chen <redchenjs@live.com>
  */
 
@@ -32,7 +32,7 @@ begin
         data_cnt <= 8'h00;
     end else begin
         ctrl <= (data_cnt == 8'h00) ? 2'b11 : 2'b00;
-        data <= (data_cnt == 8'h00) ? 16'hbcbc : {data_cnt, data_cnt};
+        data <= (data_cnt == 8'h00) ? 16'hbcbc : data_i;
 
         data_cnt <= (data_cnt == 8'h0f) ? 8'h00 : data_cnt + 1'b1;
     end

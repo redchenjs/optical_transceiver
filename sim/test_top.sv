@@ -17,6 +17,9 @@ logic sfp_tx_n_o;
 assign sfp_rx_p_i = sfp_tx_p_o;
 assign sfp_rx_n_i = sfp_tx_n_o;
 
+logic [15:0] data_i;
+logic [15:0] data_o;
+
 logic sys_clk;
 logic sys_rst_n;
 
@@ -26,25 +29,33 @@ logic ref_clk_n;
 logic gt0_txusrclk2;
 logic gt0_rxusrclk2;
 
+logic gt0_tx_fsm_reset_done;
+logic gt0_rx_fsm_reset_done;
+
 logic [15:0] gt0_rxdata;
-logic        gt0_rxoutclkfabric;
 logic  [1:0] gt0_rxcharisk;
-logic        gt0_rxresetdone;
 
 logic [15:0] gt0_txdata;
-logic        gt0_txoutclkfabric;
-logic        gt0_txoutclkpcs;
 logic  [1:0] gt0_txcharisk;
-logic        gt0_txresetdone;
 
 gtx_tx gtx_tx(
     .clk_i(gt0_txusrclk2),
-    .rst_n_i(gt0_txresetdone & gt0_rxresetdone),
+    .rst_n_i(gt0_tx_fsm_reset_done),
 
-    .data_i(16'hdead),
+    .data_i(data_i),
 
     .ctrl_o(gt0_txcharisk),
     .data_o(gt0_txdata)
+);
+
+gtx_rx gtx_rx(
+    .clk_i(gt0_rxusrclk2),
+    .rst_n_i(gt0_rx_fsm_reset_done),
+
+    .ctrl_i(gt0_rxcharisk),
+    .data_i(gt0_rxdata),
+
+    .data_o(data_o)
 );
 
 gtx gtx(
@@ -57,12 +68,10 @@ gtx gtx(
     .soft_reset_rx_in(~sys_rst_n),
     .dont_reset_on_data_error_in(1'b0),
 
-    .gt0_tx_mmcm_lock_out(),
+    .gt0_tx_fsm_reset_done_out(gt0_tx_fsm_reset_done),
+    .gt0_rx_fsm_reset_done_out(gt0_rx_fsm_reset_done),
 
-    .gt0_tx_fsm_reset_done_out(),
-    .gt0_rx_fsm_reset_done_out(),
-
-    .gt0_data_valid_in(1'b0),
+    .gt0_data_valid_in(gt0_rx_fsm_reset_done),
 
     .gt0_txusrclk_out(),
     .gt0_txusrclk2_out(gt0_txusrclk2),
@@ -104,13 +113,13 @@ gtx gtx(
     .gt0_rxmonitorout_out(),
     .gt0_rxmonitorsel_in(2'b00),
 
-    .gt0_rxoutclkfabric_out(gt0_rxoutclkfabric),
+    .gt0_rxoutclkfabric_out(),
 
     .gt0_gtrxreset_in(~sys_rst_n),
     .gt0_rxpmareset_in(~sys_rst_n),
 
     .gt0_rxcharisk_out(gt0_rxcharisk),
-    .gt0_rxresetdone_out(gt0_rxresetdone),
+    .gt0_rxresetdone_out(),
 
     .gt0_gttxreset_in(~sys_rst_n),
     .gt0_txuserrdy_in(1'b1),
@@ -120,11 +129,11 @@ gtx gtx(
     .gt0_gtxtxp_out(sfp_tx_p_o),
     .gt0_gtxtxn_out(sfp_tx_n_o),
 
-    .gt0_txoutclkfabric_out(gt0_txoutclkfabric),
-    .gt0_txoutclkpcs_out(gt0_txoutclkpcs),
+    .gt0_txoutclkfabric_out(),
+    .gt0_txoutclkpcs_out(),
 
     .gt0_txcharisk_in(gt0_txcharisk),
-    .gt0_txresetdone_out(gt0_txresetdone),
+    .gt0_txresetdone_out(),
 
     .gt0_qplloutclk_out(),
     .gt0_qplloutrefclk_out()
@@ -144,9 +153,18 @@ always begin
     #5 sys_clk <= ~sys_clk;
 end
 
+always_ff @(posedge gt0_txusrclk2 or negedge gt0_tx_fsm_reset_done)
+begin
+    if (!gt0_tx_fsm_reset_done) begin
+        data_i <= 16'h0000;
+    end else begin
+        data_i <= $random();
+    end
+end
+
 always begin
-    #3.2 ref_clk_p <= ~ref_clk_p;
-         ref_clk_n <= ~ref_clk_n;
+    #5 ref_clk_p <= ~ref_clk_p;
+       ref_clk_n <= ~ref_clk_n;
 end
 
 always begin

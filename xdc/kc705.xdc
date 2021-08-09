@@ -41,6 +41,10 @@ set_property -dict {PACKAGE_PIN AB9 IOSTANDARD LVCMOS15} [get_ports {gpio_led_o[
 set_property -dict {PACKAGE_PIN AC9 IOSTANDARD LVCMOS15} [get_ports {gpio_led_o[2]}]
 set_property -dict {PACKAGE_PIN AA8 IOSTANDARD LVCMOS15} [get_ports {gpio_led_o[1]}]
 set_property -dict {PACKAGE_PIN AB8 IOSTANDARD LVCMOS15} [get_ports {gpio_led_o[0]}]
+set_property -dict {PACKAGE_PIN AA27 IOSTANDARD LVCMOS25} [get_ports {xadc_gpio_o[3]}]
+set_property -dict {PACKAGE_PIN AB28 IOSTANDARD LVCMOS25} [get_ports {xadc_gpio_o[2]}]
+set_property -dict {PACKAGE_PIN AA25 IOSTANDARD LVCMOS25} [get_ports {xadc_gpio_i[1]}]
+set_property -dict {PACKAGE_PIN AB25 IOSTANDARD LVCMOS25} [get_ports {xadc_gpio_i[0]}]
 
 set_false_path -from [get_ports cpu_rst_i]
 set_false_path -from [get_ports uart_rx_i]
