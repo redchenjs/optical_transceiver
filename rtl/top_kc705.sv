@@ -17,9 +17,6 @@ module top_kc705(
 
     input logic cpu_rst_i,
 
-    input  logic uart_rx_i,
-    output logic uart_tx_o,
-
     input  logic sfp_rx_p_i,
     input  logic sfp_rx_n_i,
     output logic sfp_tx_p_o,
@@ -59,14 +56,16 @@ logic  [1:0] gt0_rxcharisk;
 logic [15:0] gt0_txdata;
 logic  [1:0] gt0_txcharisk;
 
+assign sfp_tx_disable_o = 1'b0;
+
 assign gpio_led_o[7] = sys_rst_n;
 assign gpio_led_o[6] = sfp_los_i;
-assign gpio_led_o[5] = xadc_gpio_o[3];
-assign gpio_led_o[4] = xadc_gpio_o[2];
-assign gpio_led_o[3] = xadc_gpio_i[1];
-assign gpio_led_o[2] = xadc_gpio_i[0];
-assign gpio_led_o[1] = gt0_rx_fsm_reset_done;
-assign gpio_led_o[0] = gt0_tx_fsm_reset_done;
+assign gpio_led_o[5] = gt0_rx_fsm_reset_done;
+assign gpio_led_o[4] = gt0_tx_fsm_reset_done;
+assign gpio_led_o[3] = xadc_gpio_o[3];
+assign gpio_led_o[2] = xadc_gpio_o[2];
+assign gpio_led_o[1] = xadc_gpio_i[1];
+assign gpio_led_o[0] = xadc_gpio_i[0];
 
 assign sm_fan_pwm_o = 1'b0;
 
@@ -76,7 +75,7 @@ IBUFDS sys_clk_buf(
     .IB(sys_clk_n_i)
 );
 
-OBUFDS user_clk_buf_o(
+OBUFDS user_clk_buf(
    .O(user_clk_p_o),
    .OB(user_clk_n_o),
    .I(sys_clk)
@@ -134,6 +133,8 @@ gtx gtx(
     .soft_reset_rx_in(~sys_rst_n),
     .dont_reset_on_data_error_in(1'b0),
 
+    .gt0_tx_mmcm_lock_out(),
+
     .gt0_tx_fsm_reset_done_out(gt0_tx_fsm_reset_done),
     .gt0_rx_fsm_reset_done_out(gt0_rx_fsm_reset_done),
 
@@ -171,7 +172,6 @@ gtx gtx(
     .gt0_rxphslipmonitor_out(),
 
     .gt0_rxdfelpmreset_in(~sys_rst_n),
-
     .gt0_rxmonitorout_out(),
     .gt0_rxmonitorsel_in(2'b00),
 
@@ -197,6 +197,8 @@ gtx gtx(
     .gt0_txcharisk_in(gt0_txcharisk),
     .gt0_txresetdone_out(),
 
+    .gt0_qplllock_out(),
+    .gt0_qpllrefclklost_out(),
     .gt0_qplloutclk_out(),
     .gt0_qplloutrefclk_out()
 );

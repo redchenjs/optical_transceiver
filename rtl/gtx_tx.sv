@@ -34,7 +34,7 @@ begin
         ctrl <= (data_cnt == 8'h00) ? 2'b11 : 2'b00;
         data <= (data_cnt == 8'h00) ? 16'hbcbc : data_i;
 
-        data_cnt <= (data_cnt == 8'h0f) ? 8'h00 : data_cnt + 1'b1;
+        data_cnt <= data_cnt + 1'b1;
     end
 end
 
