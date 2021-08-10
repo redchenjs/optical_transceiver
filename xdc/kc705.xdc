@@ -7,7 +7,7 @@ set_property CONFIG_MODE BPI16 [current_design]
 set_property CFGBVS VCCO [current_design]
 set_property CONFIG_VOLTAGE 2.5 [current_design]
 
-create_clock -period 10.0 [get_ports ref_clk_p_i]
+create_clock -period 5.0 [get_ports ref_clk_p_i]
 
 set_property -dict {PACKAGE_PIN AD12 IOSTANDARD DIFF_SSTL15} [get_ports sys_clk_p_i]
 set_property -dict {PACKAGE_PIN AD11 IOSTANDARD DIFF_SSTL15} [get_ports sys_clk_n_i]

@@ -78,7 +78,7 @@ IBUFDS sys_clk_buf(
 OBUFDS user_clk_buf(
    .O(user_clk_p_o),
    .OB(user_clk_n_o),
-   .I(sys_clk)
+   .I(user_clk)
 );
 
 sys_ctl sys_ctl(
@@ -86,7 +86,9 @@ sys_ctl sys_ctl(
     .rst_n_i(~cpu_rst_i),
 
     .sys_clk_o(sys_clk),
-    .sys_rst_n_o(sys_rst_n)
+    .sys_rst_n_o(sys_rst_n),
+
+    .aux_clk_o(user_clk)
 );
 
 rst_syn gt0_tx_rst_syn(

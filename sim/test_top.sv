@@ -23,11 +23,14 @@ logic [15:0] data_o;
 logic sys_clk;
 logic sys_rst_n;
 
-logic ref_clk_p;
-logic ref_clk_n;
+logic ref_clk_p_i;
+logic ref_clk_n_i;
 
 logic gt0_txusrclk2;
 logic gt0_rxusrclk2;
+
+logic gt0_tx_rst_n;
+logic gt0_rx_rst_n;
 
 logic gt0_tx_fsm_reset_done;
 logic gt0_rx_fsm_reset_done;
@@ -38,9 +41,16 @@ logic  [1:0] gt0_rxcharisk;
 logic [15:0] gt0_txdata;
 logic  [1:0] gt0_txcharisk;
 
-gtx_tx gtx_tx(
+rst_syn gt0_tx_rst_syn(
     .clk_i(gt0_txusrclk2),
     .rst_n_i(gt0_tx_fsm_reset_done),
+
+    .rst_n_o(gt0_tx_rst_n)
+);
+
+gtx_tx gtx_tx(
+    .clk_i(gt0_txusrclk2),
+    .rst_n_i(gt0_tx_rst_n),
 
     .data_i(data_i),
 
@@ -48,9 +58,16 @@ gtx_tx gtx_tx(
     .data_o(gt0_txdata)
 );
 
-gtx_rx gtx_rx(
+rst_syn gt0_rx_rst_syn(
     .clk_i(gt0_rxusrclk2),
     .rst_n_i(gt0_rx_fsm_reset_done),
+
+    .rst_n_o(gt0_rx_rst_n)
+);
+
+gtx_rx gtx_rx(
+    .clk_i(gt0_rxusrclk2),
+    .rst_n_i(gt0_rx_rst_n),
 
     .ctrl_i(gt0_rxcharisk),
     .data_i(gt0_rxdata),
@@ -61,12 +78,14 @@ gtx_rx gtx_rx(
 gtx gtx(
     .sysclk_in(sys_clk),
 
-    .q0_clk1_gtrefclk_pad_p_in(ref_clk_p),
-    .q0_clk1_gtrefclk_pad_n_in(ref_clk_n),
+    .q0_clk1_gtrefclk_pad_p_in(ref_clk_p_i),
+    .q0_clk1_gtrefclk_pad_n_in(ref_clk_n_i),
 
     .soft_reset_tx_in(~sys_rst_n),
     .soft_reset_rx_in(~sys_rst_n),
     .dont_reset_on_data_error_in(1'b0),
+
+    .gt0_tx_mmcm_lock_out(),
 
     .gt0_tx_fsm_reset_done_out(gt0_tx_fsm_reset_done),
     .gt0_rx_fsm_reset_done_out(gt0_rx_fsm_reset_done),
@@ -77,10 +96,6 @@ gtx gtx(
     .gt0_txusrclk2_out(gt0_txusrclk2),
     .gt0_rxusrclk_out(),
     .gt0_rxusrclk2_out(gt0_rxusrclk2),
-
-    .gt0_cpllfbclklost_out(),
-    .gt0_cplllock_out(),
-    .gt0_cpllreset_in(~sys_rst_n),
 
     .gt0_drpaddr_in(9'h000),
     .gt0_drpdi_in(16'h0000),
@@ -109,7 +124,6 @@ gtx gtx(
     .gt0_rxphslipmonitor_out(),
 
     .gt0_rxdfelpmreset_in(~sys_rst_n),
-
     .gt0_rxmonitorout_out(),
     .gt0_rxmonitorsel_in(2'b00),
 
@@ -135,6 +149,8 @@ gtx gtx(
     .gt0_txcharisk_in(gt0_txcharisk),
     .gt0_txresetdone_out(),
 
+    .gt0_qplllock_out(),
+    .gt0_qpllrefclklost_out(),
     .gt0_qplloutclk_out(),
     .gt0_qplloutrefclk_out()
 );
@@ -143,8 +159,8 @@ initial begin
     sys_clk   <= 1'b1;
     sys_rst_n <= 1'b0;
 
-    ref_clk_p <= 1'b1;
-    ref_clk_n <= 1'b0;
+    ref_clk_p_i <= 1'b1;
+    ref_clk_n_i <= 1'b0;
 
     #2 sys_rst_n <= 1'b1;
 end
@@ -163,8 +179,8 @@ begin
 end
 
 always begin
-    #5 ref_clk_p <= ~ref_clk_p;
-       ref_clk_n <= ~ref_clk_n;
+    #2.5 ref_clk_p_i <= ~ref_clk_p_i;
+         ref_clk_n_i <= ~ref_clk_n_i;
 end
 
 always begin

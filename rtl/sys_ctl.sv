@@ -10,13 +10,16 @@ module sys_ctl(
     input logic rst_n_i,
 
     output logic sys_clk_o,
-    output logic sys_rst_n_o
+    output logic sys_rst_n_o,
+
+    output logic aux_clk_o
 );
 
 pll pll(
     .reset(~rst_n_i),
     .clk_in1(clk_i),
     .clk_out1(sys_clk_o),
+    .clk_out2(aux_clk_o),
     .locked(pll_locked)
 );
 
