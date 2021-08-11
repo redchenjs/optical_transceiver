@@ -17,8 +17,8 @@ module top_sdi2002(
     output logic sfp_tx_p_o,
     output logic sfp_tx_n_o,
 
-    input  logic [0:0] xadc_gpio_i,
-    output logic [2:2] xadc_gpio_o
+    input  logic [1:0] xadc_gpio_i,
+    output logic [3:2] xadc_gpio_o
 );
 
 logic sys_clk;
