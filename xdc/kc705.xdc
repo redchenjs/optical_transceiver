@@ -7,7 +7,7 @@ set_property CONFIG_MODE BPI16 [current_design]
 set_property CFGBVS VCCO [current_design]
 set_property CONFIG_VOLTAGE 2.5 [current_design]
 
-create_clock -period 5.0 [get_ports ref_clk_p_i]
+create_clock -period 5.000 [get_ports ref_clk_p_i]
 
 set_property -dict {PACKAGE_PIN AD12 IOSTANDARD DIFF_SSTL15} [get_ports sys_clk_p_i]
 set_property -dict {PACKAGE_PIN AD11 IOSTANDARD DIFF_SSTL15} [get_ports sys_clk_n_i]
@@ -42,8 +42,8 @@ set_property -dict {PACKAGE_PIN AB28 IOSTANDARD LVCMOS25} [get_ports {xadc_gpio_
 set_property -dict {PACKAGE_PIN AA25 IOSTANDARD LVCMOS25} [get_ports {xadc_gpio_i[1]}]
 set_property -dict {PACKAGE_PIN AB25 IOSTANDARD LVCMOS25} [get_ports {xadc_gpio_i[0]}]
 
-set_false_path -to [get_pins -filter {REF_PIN_NAME=~*CLR} -of_objects [get_cells -hierarchical -filter {NAME =~ *rst_n_a*}]]
-set_false_path -to [get_pins -filter {REF_PIN_NAME=~*CLR} -of_objects [get_cells -hierarchical -filter {NAME =~ *rst_n_b*}]]
+set_false_path -to [get_pins -filter REF_PIN_NAME=~*CLR -of_objects [get_cells -hierarchical -filter {NAME =~ *rst_n_a*}]]
+set_false_path -to [get_pins -filter REF_PIN_NAME=~*CLR -of_objects [get_cells -hierarchical -filter {NAME =~ *rst_n_b*}]]
 
 set_false_path -from [get_ports cpu_rst_i]
 set_false_path -from [get_ports sm_fan_tach_i]
